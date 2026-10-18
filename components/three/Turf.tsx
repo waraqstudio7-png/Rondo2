@@ -68,7 +68,7 @@ export function Turf({ count = 70000, radius = 7.5 }: { count?: number; radius?:
   const { matrices, colors } = useMemo(() => {
     const matrices = new Float32Array(count * 16), colors = new Float32Array(count * 3);
     const R = rng(42), o = new Object3D(), c = new Color();
-    const base = [new Color("#2f6a2c"), new Color("#3a7834"), new Color("#2a5e28"), new Color("#44823b")];
+    const base = [new Color("#355f19"), new Color("#3f701e"), new Color("#2f5716"), new Color("#4a7a25")]; // sampled from the stadium pitch
     for (let i = 0; i < count; i++) {
       const r = Math.sqrt(R()) * radius, a = R() * Math.PI * 2;
       const x = r * Math.cos(a), z = r * Math.sin(a);

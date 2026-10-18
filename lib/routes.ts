@@ -18,7 +18,12 @@ export function navIndexFor(path: string): number {
   return NAV.findIndex((n) => p === n.href || p.startsWith(n.href + "/"));
 }
 
+/** Pages outside the six ring panels. */
+export const EXTRA: NavItem[] = [{ id: "ring", href: "/ring", title: "Build your ring", short: "Ring", minute: 62 }];
+
 export function routeMeta(path: string): { minute: number; title: string } {
+  const x = EXTRA.find((e) => path.replace(/\/$/, "") === e.href);
+  if (x) return { minute: x.minute, title: x.title };
   const i = navIndexFor(path);
   if (i < 0) return HOME;
   const n = NAV[i];

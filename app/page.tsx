@@ -1,4 +1,5 @@
 import RingNav from "@/components/home/RingNav";
+import { TLink } from "@/components/TLink";
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
             <p className="lede">
               A ring of rebound panels that light green and red. This page works like the real thing: pick a panel and play the pass.
             </p>
+            <TLink href="/ring" morph="self" className="btn home-cta">Build your ring →</TLink>
           </div>
         </div>
         <RingNav />

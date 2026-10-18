@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { TLink } from "./TLink";
-import { NAV, navIndexFor, routeMeta } from "@/lib/routes";
+import { EXTRA, NAV, navIndexFor, routeMeta } from "@/lib/routes";
 
 function Mark() {
   return (
@@ -57,10 +57,10 @@ export function Header() {
 /** Floating dock: centre-circle home plus one panel glyph per page. The glyph morphs into the page header. */
 export function Dock() {
   const path = usePathname();
-  const cur = navIndexFor(path);
+  const cur = EXTRA.some((x) => x.href === path) ? -2 : navIndexFor(path);
   return (
     <nav className="dock" aria-label="Main">
-      <TLink href="/" morph="head" className="home" aria-label="Centre circle" aria-current={cur < 0 ? "page" : undefined}>
+      <TLink href="/" morph="head" className="home" aria-label="Centre circle" aria-current={cur === -1 ? "page" : undefined}>
         <svg viewBox="0 0 20 20" aria-hidden="true">
           <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeWidth="1.6" />
           <circle cx="10" cy="10" r="1.8" fill="currentColor" />
@@ -72,7 +72,16 @@ export function Dock() {
           <span className="glyph" />
           <span className="lb">{n.short}</span>
         </TLink>
-      ))}
+      )).flatMap((el, i) =>
+        NAV[i].id === "line-up"
+          ? [el, ...EXTRA.map((x) => (
+              <TLink key={x.id} href={x.href} morph=".glyph" aria-current={path === x.href ? "page" : undefined}>
+                <span className="glyph ring" />
+                <span className="lb">{x.short}</span>
+              </TLink>
+            ))]
+          : [el],
+      )}
     </nav>
   );
 }

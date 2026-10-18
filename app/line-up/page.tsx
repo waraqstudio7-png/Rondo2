@@ -28,6 +28,11 @@ export default function LineUp() {
           <span><span className="h3">{clip.name}</span><p className="muted" style={{ fontSize: 15 }}>Light bar and hit sensor that clips onto any Street or Club panel.</p></span>
           <span className="price">{clip.price}</span>
         </TLink>
+        <TLink href="/ring" morph="self" className="wide face rise" style={{ ["--i" as string]: 4 }}>
+          <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><g fill="none" stroke="#2bd883" strokeWidth="4" strokeLinecap="round"><path d="M32 8 L52 20 L52 44 L32 56 L12 44 L12 20 Z" /></g></svg>
+          <span><span className="h3">Build your ring</span><p className="muted" style={{ fontSize: 15 }}>Turn it, light it, and see 4, 6, 12, 16 or 20 stations at real size.</p></span>
+          <span className="mono go">Open →</span>
+        </TLink>
         <p className="note">Prices are target pre-order prices in CAD and may change before launch. Panels are in prototype testing.</p>
         <NextFixture href="/impact" minute="75'" title="Impact" />
       </div>

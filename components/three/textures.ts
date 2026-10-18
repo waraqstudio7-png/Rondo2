@@ -204,7 +204,7 @@ export function pitchTexture(size: number) {
       const k = W / size, R = rng(11);
       const stripe = 5; // mown stripes ~5 m wide
       for (let x = 0, i = 0; x < W; x += stripe * k, i++) {
-        c.fillStyle = i % 2 ? "#285a26" : "#31692d";
+        c.fillStyle = i % 2 ? "#33601b" : "#3c6c1f";
         c.fillRect(x - ((size / 2) % stripe) * k, 0, stripe * k, H);
       }
       for (let n = 0; n < 90000; n++) {
@@ -249,4 +249,61 @@ export function radialFadeTexture(inner = 0.6, outer = 1) {
       c.fillRect(0, 0, W, W);
     }, false),
   );
+}
+
+/**
+ * Engine Bay hex finish: satin charcoal laminate with matte etched grooves (21 mm cells, <= 0.3 mm relief).
+ * withTarget adds the Hex Focus aim window and strike line (player side). Returns colour + roughness maps,
+ * so the pattern reads from a distance as a change in sheen, the way an etched face catches floodlight.
+ */
+export function hexFinishTextures(withTarget: boolean) {
+  const key = withTarget ? "hexT" : "hexB";
+  const W = 2000, H = 800, P = 2;
+  const draw = (rough: boolean) => (c: CanvasRenderingContext2D) => {
+    const X = (u: number) => (u + 500) * P, Y = (v: number) => H - v * P;
+    c.fillStyle = rough ? "#5a5a5a" : "#2e3236"; // satin cells
+    c.fillRect(0, 0, W, H);
+    const win = { x0: -100, x1: 100, y0: HEX.strikeV - 70, y1: HEX.strikeV + 70 };
+    const distWin = (u: number, v: number) => Math.hypot(Math.max(win.x0 - u, 0, u - win.x1), Math.max(win.y0 - v, 0, v - win.y1));
+    const r = HEX.r, apo = (r * Math.sqrt(3)) / 2;
+    c.strokeStyle = rough ? "#f2f2f2" : "#0b0c0d"; // matte grooves
+    for (let row = -12; row <= 12; row++) {
+      const cy = 200 + row * 1.5 * r, off = row % 2 ? apo : 0;
+      for (let col = -14; col <= 14; col++) {
+        const cx = col * 2 * apo + off;
+        let lw = 2.6; // rear face: uniform etched hex, bold enough to read across the ring
+        if (withTarget) {
+          const d = distWin(cx, cy);
+          if (d < r * 0.6) continue;
+          lw = HEX.lineMin + (HEX.lineMax - HEX.lineMin) * Math.pow(Math.min(1, d / 380), 0.8);
+        }
+        c.lineWidth = lw * P;
+        c.beginPath();
+        for (let q = 0; q < 6; q++) {
+          const a = Math.PI / 6 + (q * Math.PI) / 3;
+          c.lineTo(X(cx + r * Math.cos(a)), Y(cy + r * Math.sin(a)));
+        }
+        c.closePath();
+        c.stroke();
+      }
+    }
+    if (withTarget) {
+      c.fillStyle = rough ? "#3a3a3a" : "#2e3236";
+      c.strokeStyle = rough ? "#808080" : "#eef0ec";
+      c.lineWidth = 1.6 * P;
+      c.beginPath();
+      c.roundRect(X(win.x0), Y(win.y1), 200 * P, 140 * P, 18 * P);
+      c.fill();
+      c.stroke();
+      c.lineWidth = 1.4 * P;
+      c.beginPath();
+      c.moveTo(X(-82), Y(HEX.strikeV)); c.lineTo(X(-8), Y(HEX.strikeV));
+      c.moveTo(X(8), Y(HEX.strikeV)); c.lineTo(X(82), Y(HEX.strikeV));
+      c.moveTo(X(0), Y(HEX.strikeV - 7)); c.lineTo(X(0), Y(HEX.strikeV + 7));
+      c.stroke();
+    }
+  };
+  const map = once(key + "c", () => make(W, H, draw(false)));
+  const roughnessMap = once(key + "r", () => make(W, H, draw(true), false));
+  return { map, roughnessMap };
 }

@@ -2,7 +2,8 @@ import { Object3D, PerspectiveCamera, Vector3 } from "three";
 
 /** Real-scale ring: 12 panels (1.0 m x 0.4 m) on a 2.4 m radius, centred on the centre spot. */
 export const N = 12;
-export const R = 2.4;
+/** Closed 12-station ring: apothem from 1000 mm faces + 14 mm knuckle posts (inside diameter ~3.78 m). */
+export const R = 1.014 / (2 * Math.tan(Math.PI / 12));
 export const PANEL_W = 1.0;
 export const PANEL_H = 0.4;
 /** Panels that carry a page, in NAV order. */
@@ -29,9 +30,9 @@ export function poseCamera(cam: PerspectiveCamera, w: number, h: number) {
   const fw = wide ? w * 1.28 : w, fh = wide ? h : h * 1.45;
   const fov = asp < 1 ? 46 : FOV;
   // Pull back until the 4.8 m ring (plus labels) fits the frame width.
-  const fitD = 3.3 / (Math.tan((fov * Math.PI) / 360) * (fw / fh));
-  const D = Math.max(wide ? 9.4 : 7.0, fitD);
-  const H = wide ? 4.1 : D * 0.6;
+  const fitD = 2.45 / (Math.tan((fov * Math.PI) / 360) * (fw / fh));
+  const D = Math.max(wide ? 6.9 : 5.4, fitD);
+  const H = wide ? 3.3 : D * 0.6;
   const th = ringState.theta + ringState.px * 0.25;
   cam.fov = fov;
   cam.aspect = fw / fh;

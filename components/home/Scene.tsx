@@ -1,14 +1,18 @@
 "use client";
 
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
-import { Suspense, useEffect, useMemo, useRef } from "react";
-import { Color, EquirectangularReflectionMapping, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, SRGBColorSpace, TextureLoader, Vector3 } from "three";
+import { Suspense, useMemo, useRef } from "react";
+import { Color, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 } from "three";
 import { N, NAV_IDX, R, panelAngle, poseCamera, ringState } from "@/lib/ring";
 import { Station } from "../three/Station";
 import { Turf } from "../three/Turf";
 import { Ball } from "../three/Ball";
+import { KnucklePost } from "../three/KnucklePost";
+import { StadiumEnv } from "../three/StadiumEnv";
+import { closedRing } from "@/lib/layout";
+
+const RING = closedRing(12);
 
 // Light states. Values above 1 feed the bloom pass, like a real LED line seen at night.
 const GO = new Color("#22e070").multiplyScalar(6);
@@ -16,25 +20,6 @@ const STOP = new Color("#ff4a3d").multiplyScalar(5.5);
 const IDLE = new Color("#e8efe9").multiplyScalar(0.9);
 const OFF = new Color("#26302c");
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-
-/**
- * Real stadium (Poly Haven "stadium_01", CC0): the 1k HDR lights and reflects the scene; a 2k JPG of the same
- * panorama is the backdrop, dimmed to an evening session and softened so it reads as depth, not detail.
- */
-function Stadium() {
-  const { scene } = useThree();
-  const bg = useLoader(TextureLoader, "/hdri/stadium_01_bg.jpg");
-  useEffect(() => {
-    bg.mapping = EquirectangularReflectionMapping;
-    bg.colorSpace = SRGBColorSpace;
-    scene.background = bg;
-    scene.backgroundIntensity = 0.28;
-    scene.backgroundBlurriness = 0.035;
-    scene.backgroundRotation.set(0, 1.9, 0);
-    return () => { scene.background = null; };
-  }, [bg, scene]);
-  return <Environment files="/hdri/stadium_01_1k.hdr" environmentIntensity={0.3} environmentRotation={[0, 1.9, 0]} />;
-}
 
 function Rig({ labels, onArrive }: { labels: React.RefObject<(HTMLAnchorElement | null)[]>; onArrive: (k: number) => void }) {
   const { camera, size } = useThree();
@@ -145,10 +130,14 @@ function Rig({ labels, onArrive }: { labels: React.RefObject<(HTMLAnchorElement 
           />
         );
       })}
+      {/* closed ring: knuckle posts fill every joint, so the faces read as one continuous wall */}
+      {RING.posts.map((p, i) => (
+        <KnucklePost key={i} x={p.x} z={p.z} />
+      ))}
       {/* scan cone and centre spot */}
       <group ref={cone}>
         <mesh rotation-x={-Math.PI / 2} position-y={0.03}>
-          <circleGeometry args={[2.1, 40, -0.4, 0.8]} />
+          <circleGeometry args={[1.75, 40, -0.4, 0.8]} />
           <meshBasicMaterial color="#2bd883" transparent opacity={0.07} depthWrite={false} />
         </mesh>
       </group>
@@ -169,7 +158,7 @@ export default function Scene({
       shadows
       dpr={[1, 1.75]}
       camera={{ fov: 36, near: 0.1, far: 80, position: [0, 4, 8] }}
-      gl={{ antialias: false, powerPreference: "high-performance", toneMappingExposure: 0.82 }}
+      gl={{ antialias: false, powerPreference: "high-performance", toneMappingExposure: 0.78 }}
       onPointerMove={(e) => {
         const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
         ringState.px = (e.clientX - r.left) / r.width - 0.5;
@@ -178,11 +167,11 @@ export default function Scene({
       aria-hidden="true"
     >
       <Suspense fallback={null}>
-        <Stadium />
+        <StadiumEnv />
       </Suspense>
       <Rig labels={labels} onArrive={onArrive} />
       <EffectComposer multisampling={4}>
-        <Bloom mipmapBlur intensity={1.25} luminanceThreshold={1.15} luminanceSmoothing={0.15} radius={0.7} />
+        <Bloom mipmapBlur intensity={1.25} luminanceThreshold={1.3} luminanceSmoothing={0.15} radius={0.7} />
         <Vignette offset={0.28} darkness={0.62} />
       </EffectComposer>
     </Canvas>
