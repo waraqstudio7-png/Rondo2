@@ -7,7 +7,7 @@ export default function Home() {
         <div className="home-copy">
           <div className="wrap">
             <span className="mono muted">
-              <b className="go" style={{ fontWeight: 500 }}>0&apos;</b> Kick-off · Prototype in testing · Ontario
+              <b className="minute">0&apos;</b> Kick-off · Prototype in testing · Ontario
             </span>
             <h1 className="h1">Every pass starts with a look.</h1>
             <p className="lede">

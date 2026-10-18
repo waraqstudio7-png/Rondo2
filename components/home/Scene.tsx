@@ -1,216 +1,97 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
-import {
-  AdditiveBlending,
-  CanvasTexture,
-  Color,
-  Fog,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-  PerspectiveCamera,
-  SRGBColorSpace,
-  Sprite,
-  Vector3,
-} from "three";
-import { N, NAV_IDX, PANEL_H, PANEL_W, R, panelAngle, poseCamera, ringState } from "@/lib/ring";
+import { Environment } from "@react-three/drei";
+import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
+import { Suspense, use, useMemo, useRef } from "react";
+import { Color, Fog, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 } from "three";
+import { N, NAV_IDX, R, panelAngle, poseCamera, ringState } from "@/lib/ring";
+import { Station } from "../three/Station";
+import { Turf } from "../three/Turf";
+import { Ball } from "../three/Ball";
 
-const GO = new Color("#3cf09c");
-const STOP = new Color("#ff4f60");
-const IDLE = new Color("#5d7468");
-const OFF = new Color("#2a4136");
+// Light states. Values above 1 feed the bloom pass, like a real LED line seen at night.
+const GO = new Color("#22e070").multiplyScalar(6);
+const STOP = new Color("#ff4a3d").multiplyScalar(5.5);
+const IDLE = new Color("#e8efe9").multiplyScalar(0.9);
+const OFF = new Color("#26302c");
+const BG = "#0b0e10";
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
-function canvasTex(w: number, h: number, draw: (c: CanvasRenderingContext2D) => void, srgb = true) {
-  const cv = document.createElement("canvas");
-  cv.width = w;
-  cv.height = h;
-  draw(cv.getContext("2d")!);
-  const t = new CanvasTexture(cv);
-  if (srgb) t.colorSpace = SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
-}
-
-/** Night pitch: mowing stripes, the real 9.15 m centre circle, halfway line, centre spot. 1 unit = 1 m. */
-function Pitch() {
-  const tex = useMemo(() => {
-    const S = 26, PX = 1024, k = PX / S;
-    return canvasTex(PX, PX, (c) => {
-      for (let x = 0, i = 0; x < PX; x += 2 * k, i++) {
-        c.fillStyle = i % 2 ? "#0b1c15" : "#08160f";
-        c.fillRect(x, 0, 2 * k, PX);
-      }
-      c.strokeStyle = "rgba(237,243,238,.32)";
-      c.lineWidth = 0.12 * k;
-      c.beginPath(); c.arc(PX / 2, PX / 2, 9.15 * k, 0, Math.PI * 2); c.stroke();
-      c.beginPath(); c.moveTo(0, PX / 2); c.lineTo(PX, PX / 2); c.stroke();
-      c.fillStyle = "rgba(237,243,238,.5)";
-      c.beginPath(); c.arc(PX / 2, PX / 2, 0.12 * k, 0, Math.PI * 2); c.fill();
-    });
-  }, []);
-  return (
-    <mesh rotation-x={-Math.PI / 2}>
-      <planeGeometry args={[26, 26]} />
-      <meshStandardMaterial map={tex} roughness={0.95} metalness={0} />
-    </mesh>
-  );
-}
-
-type PanelRefs = { strip: MeshBasicMaterial | null; glow: Sprite | null; cur: Color };
-
-/** The 12 stations: 1000 x 400 face (Hex Focus skin, aim window, strike line), spine with light strip, 3 shoes. */
-function Ring({ refs }: { refs: React.MutableRefObject<PanelRefs[]> }) {
-  const { faceTex, glowTex } = useMemo(() => {
-    const faceTex = canvasTex(500, 200, (c) => {
-      const h = 200, r = 9;
-      c.fillStyle = "#10241b"; c.fillRect(0, 0, 500, h);
-      c.strokeStyle = "rgba(237,243,238,.12)"; c.lineWidth = 1.2;
-      for (let row = 0; row < 16; row++)
-        for (let col = 0; col < 34; col++) {
-          const x = col * r * 1.732 + (row % 2 ? r * 0.866 : 0), y = row * r * 1.5;
-          c.beginPath();
-          for (let q = 0; q < 6; q++) { const a = Math.PI / 6 + (q * Math.PI) / 3; c.lineTo(x + r * Math.cos(a), y + r * Math.sin(a)); }
-          c.closePath(); c.stroke();
-        }
-      // aim window 200 x 140 mm centred on the strike line, 110 mm above the floor (100 mm above the face bottom)
-      c.fillStyle = "#10241b"; c.strokeStyle = "rgba(237,243,238,.85)"; c.lineWidth = 1.6;
-      c.beginPath(); c.rect(200, h - 50 - 35, 100, 70); c.fill(); c.stroke();
-      c.beginPath();
-      c.moveTo(209, h - 50); c.lineTo(246, h - 50); c.moveTo(254, h - 50); c.lineTo(291, h - 50);
-      c.moveTo(250, h - 54); c.lineTo(250, h - 46); c.stroke();
-    });
-    const glowTex = canvasTex(128, 64, (c) => {
-      const g = c.createRadialGradient(64, 32, 0, 64, 32, 64);
-      g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.35, "rgba(255,255,255,.35)"); g.addColorStop(1, "rgba(255,255,255,0)");
-      c.fillStyle = g; c.fillRect(0, 0, 128, 64);
-    }, false);
-    return { faceTex, glowTex };
-  }, []);
-
-  return (
-    <>
-      {Array.from({ length: N }, (_, i) => {
-        const a = panelAngle(i);
-        refs.current[i] ??= { strip: null, glow: null, cur: OFF.clone() };
-        return (
-          <group
-            key={i}
-            position={[R * Math.cos(a), 0, R * Math.sin(a)]}
-            ref={(g: Group | null) => g?.lookAt(0, 0, 0)}
-          >
-            <mesh position-y={0.21}>
-              <boxGeometry args={[PANEL_W, PANEL_H, 0.06]} />
-              <meshStandardMaterial color="#13291f" roughness={0.55} metalness={0.25} />
-            </mesh>
-            <mesh position={[0, 0.21, 0.031]}>
-              <planeGeometry args={[PANEL_W, PANEL_H]} />
-              <meshStandardMaterial map={faceTex} roughness={0.7} />
-            </mesh>
-            <mesh position-y={0.43}>
-              <boxGeometry args={[1.02, 0.052, 0.09]} />
-              <meshStandardMaterial color="#1d362a" roughness={0.35} metalness={0.55} />
-            </mesh>
-            <mesh position={[0, 0.457, 0.03]}>
-              <boxGeometry args={[0.94, 0.014, 0.02]} />
-              <meshBasicMaterial color={OFF} ref={(m: MeshBasicMaterial | null) => { refs.current[i].strip = m; }} />
-            </mesh>
-            <sprite position={[0, 0.47, 0.06]} scale={[1.7, 0.5, 1]} ref={(s: Sprite | null) => { refs.current[i].glow = s; }}>
-              <spriteMaterial map={glowTex} color={GO} transparent opacity={0} blending={AdditiveBlending} depthWrite={false} />
-            </sprite>
-            {[-0.43, 0, 0.43].map((x) => (
-              <mesh key={x} position={[x, 0.04, -0.1]}>
-                <boxGeometry args={[0.11, 0.08, 0.26]} />
-                <meshStandardMaterial color="#1d362a" roughness={0.35} metalness={0.55} />
-              </mesh>
-            ))}
-          </group>
-        );
-      })}
-    </>
-  );
+const night = typeof window !== "undefined" ? import("@pmndrs/assets/hdri/night.exr") : null;
+function Env() {
+  const m = use(night!);
+  return <Environment files={m.default} environmentIntensity={0.35} />;
 }
 
 function Rig({ labels, onArrive }: { labels: React.RefObject<(HTMLAnchorElement | null)[]>; onArrive: (k: number) => void }) {
   const { camera, size, scene } = useThree();
-  const panels = useRef<PanelRefs[]>([]);
-  const player = useRef<Group>(null);
+  const lights = useRef<(MeshBasicMaterial | null)[]>([]);
+  const cur = useMemo(() => Array.from({ length: N }, () => OFF.clone()), []);
   const cone = useRef<Group>(null);
   const ball = useRef<Mesh>(null);
   const facing = useRef(-Math.PI / 2);
-  const from = useRef(new Vector3());
+  const from = useRef<Vector3 | null>(null);
+  const prev = useRef(new Vector3());
   const tmp = useMemo(() => new Vector3(), []);
+  const axis = useMemo(() => new Vector3(), []);
   const reduce = useMemo(() => typeof window !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches, []);
-
-  const ballTex = useMemo(
-    () =>
-      canvasTex(256, 128, (c) => {
-        c.fillStyle = "#f2f5f2"; c.fillRect(0, 0, 256, 128); c.fillStyle = "#16241d";
-        [[32, 30], [96, 30], [160, 30], [224, 30], [0, 98], [64, 98], [128, 98], [192, 98], [256, 98], [64, 64], [192, 64]].forEach(([x, y]) => {
-          c.beginPath();
-          for (let q = 0; q < 5; q++) { const a = -Math.PI / 2 + (q * 2 * Math.PI) / 5; c.lineTo(x + 13 * Math.cos(a), y + 13 * Math.sin(a)); }
-          c.closePath(); c.fill();
-        });
-      }),
-    [],
-  );
+  const blades = size.width < 700 ? 28000 : 70000;
 
   useFrame((_, dtRaw) => {
     const dt = Math.min(0.05, dtRaw), now = performance.now();
     const cam = camera as PerspectiveCamera;
-    if (!reduce && !ringState.passing) ringState.theta += dt * 0.035;
+    if (!reduce && !ringState.passing) ringState.theta += dt * 0.03;
     const D = poseCamera(cam, size.width, size.height);
-    if (scene.fog instanceof Fog) { scene.fog.near = D - 4; scene.fog.far = D + 9; }
+    if (scene.fog instanceof Fog) { scene.fog.near = D - 2; scene.fog.far = D + 11; }
 
     const p = ringState.passing;
-    const target = ringState.hover >= 0 ? NAV_IDX[ringState.hover] : p ? NAV_IDX[p.k] : Math.floor(now / 2200) % N;
+    const target = ringState.hover >= 0 ? NAV_IDX[ringState.hover] : p ? NAV_IDX[p.k] : Math.floor(now / 2400) % N;
     let d = panelAngle(target) - facing.current;
     while (d > Math.PI) d -= 2 * Math.PI;
     while (d < -Math.PI) d += 2 * Math.PI;
-    facing.current += d * Math.min(1, dt * 6);
-    if (player.current) player.current.rotation.y = -facing.current + Math.PI / 2;
+    facing.current += d * Math.min(1, dt * 5);
     if (cone.current) cone.current.rotation.y = -facing.current;
 
-    // lights: the target is green; a few red decoys tick round; nav panels sit at a dim idle
-    const idle = Math.floor(now / 2200);
-    panels.current.forEach((pr, i) => {
+    // Green = play it (steady). Red = closed (pulsing, so it reads without colour vision too). Nav panels idle soft white.
+    const tick = Math.floor(now / 2400);
+    const pulse = 0.55 + 0.45 * Math.sin(now / 160);
+    for (let i = 0; i < N; i++) {
       const isNav = NAV_IDX.includes(i);
-      let col = OFF, glow = 0;
-      if (i === target) { col = GO; glow = 0.9; }
-      else if (!isNav && (i * 7 + idle) % 5 === 0) { col = STOP; glow = 0.6; }
+      let col = OFF, k = 1;
+      if (i === target) col = GO;
+      else if (!isNav && (i * 7 + tick) % 5 === 0) { col = STOP; k = pulse; }
       else if (isNav) col = IDLE;
-      pr.cur.lerp(col, Math.min(1, dt * 10));
-      pr.strip?.color.copy(pr.cur);
-      if (pr.glow) {
-        const m = pr.glow.material;
-        m.color.copy(pr.cur);
-        m.opacity += (glow - m.opacity) * Math.min(1, dt * 8);
-      }
-    });
+      cur[i].lerp(col, Math.min(1, dt * 9));
+      lights.current[i]?.color.copy(cur[i]).multiplyScalar(k);
+    }
 
-    // ball: rests at the player's feet, or rolls along the ground to the chosen panel
+    // ball: rests on the centre spot, or rolls along the turf to the chosen panel (rotation matches distance)
     const b = ball.current;
     if (b) {
+      prev.current.copy(b.position);
       if (p) {
-        if (!from.current.lengthSq()) from.current.copy(b.position);
-        const k = Math.min(1, (now - p.t0) / 520), a = panelAngle(NAV_IDX[p.k]);
-        tmp.set(Math.cos(a) * (R - 0.16), 0.11, Math.sin(a) * (R - 0.16));
+        from.current ??= b.position.clone();
+        const k = Math.min(1, (now - p.t0) / 560), a = panelAngle(NAV_IDX[p.k]);
+        tmp.set(Math.cos(a) * (R - 0.13), 0.11, Math.sin(a) * (R - 0.13));
         b.position.lerpVectors(from.current, tmp, ease(k));
-        b.rotation.x += dt * 18;
         if (k >= 1) {
           ringState.passing = null;
-          from.current.set(0, 0, 0);
+          from.current = null;
           onArrive(p.k);
         }
       } else {
-        tmp.set(Math.cos(facing.current) * 0.32, 0.11, Math.sin(facing.current) * 0.32);
-        b.position.lerp(tmp, Math.min(1, dt * 4));
+        tmp.set(Math.cos(facing.current) * 0.28, 0.11, Math.sin(facing.current) * 0.28);
+        b.position.lerp(tmp, Math.min(1, dt * 3));
+      }
+      const dx = b.position.x - prev.current.x, dz = b.position.z - prev.current.z, dist = Math.hypot(dx, dz);
+      if (dist > 1e-5) {
+        axis.set(dz, 0, -dx).normalize();
+        b.rotateOnWorldAxis(axis, dist / 0.11);
       }
     }
 
-    // DOM labels follow their panels
+    // DOM labels ride above their panels
     NAV_IDX.forEach((i, k) => {
       const el = labels.current?.[k];
       if (!el) return;
@@ -225,36 +106,44 @@ function Rig({ labels, onArrive }: { labels: React.RefObject<(HTMLAnchorElement 
 
   return (
     <>
-      <fog attach="fog" args={["#06110d", 8, 19]} />
-      <hemisphereLight args={["#dfeee6", "#06110d", 1.4]} />
-      <directionalLight position={[4, 9, 6]} intensity={2.2} color="#ffe7b3" />
-      <directionalLight position={[-6, 3, -5]} intensity={0.5} color="#3cf09c" />
-      <Pitch />
-      <Ring refs={panels} />
-      <group ref={player}>
-        <mesh position-y={0.62}>
-          <cylinderGeometry args={[0.13, 0.1, 0.78, 20]} />
-          <meshStandardMaterial color="#e9efe9" roughness={0.45} />
-        </mesh>
-        <mesh position-y={1.1}>
-          <sphereGeometry args={[0.1, 20, 16]} />
-          <meshStandardMaterial color="#e9efe9" roughness={0.45} />
-        </mesh>
-        <mesh position-y={0.17}>
-          <cylinderGeometry args={[0.09, 0.07, 0.3, 16]} />
-          <meshStandardMaterial color="#1d362a" />
-        </mesh>
-      </group>
+      <color attach="background" args={[BG]} />
+      <fog attach="fog" args={[BG, 8, 20]} />
+      <hemisphereLight args={["#cfd8d4", "#0b0e10", 0.35]} />
+      {/* floodlights: a warm key that casts shadows, a cooler fill from the far stand */}
+      <directionalLight
+        position={[5, 10, 4]}
+        intensity={2.6}
+        color="#fff1dc"
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-left={-4.5}
+        shadow-camera-right={4.5}
+        shadow-camera-top={4.5}
+        shadow-camera-bottom={-4.5}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.02}
+      />
+      <directionalLight position={[-6, 7, -5]} intensity={0.9} color="#dbe6ff" />
+      <Turf key={blades} count={blades} />
+      {Array.from({ length: N }, (_, i) => {
+        const a = panelAngle(i);
+        return (
+          <Station
+            key={i}
+            position={[R * Math.cos(a), 0, R * Math.sin(a)]}
+            ref={(g: Group | null) => g?.lookAt(0, 0, 0)}
+            lightRef={(m) => (lights.current[i] = m)}
+          />
+        );
+      })}
+      {/* scan cone and centre spot */}
       <group ref={cone}>
-        <mesh rotation-x={-Math.PI / 2} position-y={0.006}>
-          <circleGeometry args={[1.9, 32, -0.42, 0.84]} />
-          <meshBasicMaterial color={GO} transparent opacity={0.1} depthWrite={false} />
+        <mesh rotation-x={-Math.PI / 2} position-y={0.03}>
+          <circleGeometry args={[2.1, 40, -0.4, 0.8]} />
+          <meshBasicMaterial color="#2bd883" transparent opacity={0.07} depthWrite={false} />
         </mesh>
       </group>
-      <mesh ref={ball} position={[0.3, 0.11, 0]}>
-        <sphereGeometry args={[0.11, 32, 24]} />
-        <meshStandardMaterial map={ballTex} roughness={0.4} />
-      </mesh>
+      <Ball ref={ball} position={[0.28, 0.11, 0]} />
     </>
   );
 }
@@ -268,10 +157,10 @@ export default function Scene({
 }) {
   return (
     <Canvas
-      flat
-      dpr={[1, 2]}
+      shadows
+      dpr={[1, 1.75]}
       camera={{ fov: 36, near: 0.1, far: 80, position: [0, 4, 8] }}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+      gl={{ antialias: false, powerPreference: "high-performance" }}
       onPointerMove={(e) => {
         const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
         ringState.px = (e.clientX - r.left) / r.width - 0.5;
@@ -279,7 +168,14 @@ export default function Scene({
       }}
       aria-hidden="true"
     >
+      <Suspense fallback={null}>
+        <Env />
+      </Suspense>
       <Rig labels={labels} onArrive={onArrive} />
+      <EffectComposer multisampling={4}>
+        <Bloom mipmapBlur intensity={1.25} luminanceThreshold={1} luminanceSmoothing={0.2} radius={0.7} />
+        <Vignette offset={0.28} darkness={0.62} />
+      </EffectComposer>
     </Canvas>
   );
 }

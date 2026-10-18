@@ -21,7 +21,7 @@ export default function Reserve() {
           <p className="muted">Deposits will run through a Stripe Payment Link. Nothing on this page takes payment yet.</p>
         </div>
         <div className="block" style={{ maxWidth: 860 }}>
-          <div className="mono muted" style={{ marginBottom: 18 }}><b className="go" style={{ fontWeight: 500 }}>90+2&apos;</b> Stoppage-time questions</div>
+          <div className="mono muted" style={{ marginBottom: 18 }}><b className="minute">90+2&apos;</b> Stoppage-time questions</div>
           {FAQ.map(([q, a]) => (
             <details key={q} style={{ borderTop: "1px solid var(--line)", padding: "18px 0" }}>
               <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: 18 }}>{q}</summary>

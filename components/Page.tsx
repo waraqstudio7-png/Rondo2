@@ -54,7 +54,7 @@ export function Formation({ panels, lit, open }: { panels: number; lit: number; 
     const a = open ? -Math.PI / 2 + (i - (panels - 1) / 2) * 0.9 : -Math.PI / 2 + (i * 2 * Math.PI) / panels;
     const half = open ? 0.33 : (Math.PI / panels) * 0.78;
     const on = lit >= panels || (lit > 0 && i % Math.round(panels / lit) === 0);
-    const col = on ? (i % 4 === 2 ? "var(--stop)" : "var(--go)") : "rgba(237,243,238,.35)";
+    const col = on ? (i % 4 === 2 ? "var(--stop)" : "var(--go)") : "rgba(243,241,234,.35)";
     return (
       <line
         key={i}

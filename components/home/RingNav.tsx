@@ -36,7 +36,16 @@ export default function RingNav() {
     e.preventDefault();
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!gl || reduce) return arrive(k);
-    if (!ringState.passing) ringState.passing = { k, t0: performance.now() };
+    if (ringState.passing) return;
+    const t0 = performance.now();
+    ringState.passing = { k, t0 };
+    // safety net: if frames stall (slow GPU, background tab), still open the page
+    setTimeout(() => {
+      if (ringState.passing?.t0 === t0) {
+        ringState.passing = null;
+        arrive(k);
+      }
+    }, 1400);
   };
 
   return (
@@ -51,7 +60,7 @@ export default function RingNav() {
             ref={(el) => {
               labels.current[k] = el;
             }}
-            style={gl === false ? { position: "static", background: "rgba(6,17,13,.6)" } : { opacity: 0 }}
+            style={gl === false ? { position: "static", background: "rgba(11,14,16,.6)" } : { opacity: 0 }}
             aria-label={`${n.title}. Play the pass to open this page`}
             onClick={onClick(k)}
             onPointerEnter={() => (ringState.hover = k)}

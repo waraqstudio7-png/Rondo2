@@ -24,7 +24,7 @@ export default function LineUp() {
           ))}
         </div>
         <TLink href="/line-up/smart-clip" morph="self" data-card="smart-clip" className="wide face rise" style={{ ["--i" as string]: 3 }}>
-          <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="24" width="52" height="16" rx="5" fill="#13291f" stroke="rgba(237,243,238,.4)" /><rect x="12" y="29" width="40" height="5" rx="2.5" fill="#3cf09c" /><path d="M14 40 v10 M50 40 v10" stroke="rgba(237,243,238,.4)" strokeWidth="3" strokeLinecap="round" /></svg>
+          <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="24" width="52" height="16" rx="5" fill="#1b2226" stroke="rgba(243,241,234,.4)" /><rect x="12" y="29" width="40" height="5" rx="2.5" fill="#2bd883" /><path d="M14 40 v10 M50 40 v10" stroke="rgba(243,241,234,.4)" strokeWidth="3" strokeLinecap="round" /></svg>
           <span><span className="h3">{clip.name}</span><p className="muted" style={{ fontSize: 15 }}>Light bar and hit sensor that clips onto any Street or Club panel.</p></span>
           <span className="price">{clip.price}</span>
         </TLink>
