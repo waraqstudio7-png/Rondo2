@@ -1,10 +1,10 @@
 "use client";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
 import { Bloom, EffectComposer, Vignette } from "@react-three/postprocessing";
-import { Suspense, use, useMemo, useRef } from "react";
-import { Color, Fog, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Vector3 } from "three";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Color, EquirectangularReflectionMapping, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, SRGBColorSpace, TextureLoader, Vector3 } from "three";
 import { N, NAV_IDX, R, panelAngle, poseCamera, ringState } from "@/lib/ring";
 import { Station } from "../three/Station";
 import { Turf } from "../three/Turf";
@@ -15,17 +15,29 @@ const GO = new Color("#22e070").multiplyScalar(6);
 const STOP = new Color("#ff4a3d").multiplyScalar(5.5);
 const IDLE = new Color("#e8efe9").multiplyScalar(0.9);
 const OFF = new Color("#26302c");
-const BG = "#0b0e10";
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
-const night = typeof window !== "undefined" ? import("@pmndrs/assets/hdri/night.exr") : null;
-function Env() {
-  const m = use(night!);
-  return <Environment files={m.default} environmentIntensity={0.35} />;
+/**
+ * Real stadium (Poly Haven "stadium_01", CC0): the 1k HDR lights and reflects the scene; a 2k JPG of the same
+ * panorama is the backdrop, dimmed to an evening session and softened so it reads as depth, not detail.
+ */
+function Stadium() {
+  const { scene } = useThree();
+  const bg = useLoader(TextureLoader, "/hdri/stadium_01_bg.jpg");
+  useEffect(() => {
+    bg.mapping = EquirectangularReflectionMapping;
+    bg.colorSpace = SRGBColorSpace;
+    scene.background = bg;
+    scene.backgroundIntensity = 0.28;
+    scene.backgroundBlurriness = 0.035;
+    scene.backgroundRotation.set(0, 1.9, 0);
+    return () => { scene.background = null; };
+  }, [bg, scene]);
+  return <Environment files="/hdri/stadium_01_1k.hdr" environmentIntensity={0.3} environmentRotation={[0, 1.9, 0]} />;
 }
 
 function Rig({ labels, onArrive }: { labels: React.RefObject<(HTMLAnchorElement | null)[]>; onArrive: (k: number) => void }) {
-  const { camera, size, scene } = useThree();
+  const { camera, size } = useThree();
   const lights = useRef<(MeshBasicMaterial | null)[]>([]);
   const cur = useMemo(() => Array.from({ length: N }, () => OFF.clone()), []);
   const cone = useRef<Group>(null);
@@ -42,8 +54,7 @@ function Rig({ labels, onArrive }: { labels: React.RefObject<(HTMLAnchorElement 
     const dt = Math.min(0.05, dtRaw), now = performance.now();
     const cam = camera as PerspectiveCamera;
     if (!reduce && !ringState.passing) ringState.theta += dt * 0.03;
-    const D = poseCamera(cam, size.width, size.height);
-    if (scene.fog instanceof Fog) { scene.fog.near = D - 2; scene.fog.far = D + 11; }
+    poseCamera(cam, size.width, size.height);
 
     const p = ringState.passing;
     const target = ringState.hover >= 0 ? NAV_IDX[ringState.hover] : p ? NAV_IDX[p.k] : Math.floor(now / 2400) % N;
@@ -106,13 +117,11 @@ function Rig({ labels, onArrive }: { labels: React.RefObject<(HTMLAnchorElement 
 
   return (
     <>
-      <color attach="background" args={[BG]} />
-      <fog attach="fog" args={[BG, 8, 20]} />
-      <hemisphereLight args={["#cfd8d4", "#0b0e10", 0.35]} />
+      <hemisphereLight args={["#cfd8d4", "#1c2a1e", 0.25]} />
       {/* floodlights: a warm key that casts shadows, a cooler fill from the far stand */}
       <directionalLight
         position={[5, 10, 4]}
-        intensity={2.6}
+        intensity={1.9}
         color="#fff1dc"
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -160,7 +169,7 @@ export default function Scene({
       shadows
       dpr={[1, 1.75]}
       camera={{ fov: 36, near: 0.1, far: 80, position: [0, 4, 8] }}
-      gl={{ antialias: false, powerPreference: "high-performance" }}
+      gl={{ antialias: false, powerPreference: "high-performance", toneMappingExposure: 0.82 }}
       onPointerMove={(e) => {
         const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
         ringState.px = (e.clientX - r.left) / r.width - 0.5;
@@ -169,11 +178,11 @@ export default function Scene({
       aria-hidden="true"
     >
       <Suspense fallback={null}>
-        <Env />
+        <Stadium />
       </Suspense>
       <Rig labels={labels} onArrive={onArrive} />
       <EffectComposer multisampling={4}>
-        <Bloom mipmapBlur intensity={1.25} luminanceThreshold={1} luminanceSmoothing={0.2} radius={0.7} />
+        <Bloom mipmapBlur intensity={1.25} luminanceThreshold={1.15} luminanceSmoothing={0.15} radius={0.7} />
         <Vignette offset={0.28} darkness={0.62} />
       </EffectComposer>
     </Canvas>

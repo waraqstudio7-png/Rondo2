@@ -204,7 +204,7 @@ export function pitchTexture(size: number) {
       const k = W / size, R = rng(11);
       const stripe = 5; // mown stripes ~5 m wide
       for (let x = 0, i = 0; x < W; x += stripe * k, i++) {
-        c.fillStyle = i % 2 ? "#24502f" : "#2c5c36";
+        c.fillStyle = i % 2 ? "#285a26" : "#31692d";
         c.fillRect(x - ((size / 2) % stripe) * k, 0, stripe * k, H);
       }
       for (let n = 0; n < 90000; n++) {
@@ -212,7 +212,7 @@ export function pitchTexture(size: number) {
         c.fillStyle = R() > 0.5 ? `rgba(10,30,14,${a})` : `rgba(120,170,100,${a * 0.7})`;
         c.fillRect(R() * W, R() * H, 1 + R() * 2, 1 + R() * 3);
       }
-      c.strokeStyle = "rgba(240,244,236,.82)";
+      c.strokeStyle = "rgba(225,230,220,.62)";
       c.lineWidth = 0.12 * k;
       c.beginPath(); c.arc(W / 2, H / 2, 9.15 * k, 0, Math.PI * 2); c.stroke();
       c.beginPath(); c.moveTo(0, H / 2); c.lineTo(W, H / 2); c.stroke();
@@ -234,6 +234,19 @@ export function glowTexture() {
       g.addColorStop(1, "rgba(255,255,255,0)");
       c.fillStyle = g;
       c.fillRect(0, 0, 128, 64);
+    }, false),
+  );
+}
+
+/** Radial alpha so the near-field pitch melts into the stadium backdrop instead of ending at a hard edge. */
+export function radialFadeTexture(inner = 0.6, outer = 1) {
+  return once(`fade${inner}`, () =>
+    make(512, 512, (c, W) => {
+      const g = c.createRadialGradient(W / 2, W / 2, (W / 2) * inner, W / 2, W / 2, (W / 2) * outer);
+      g.addColorStop(0, "#fff");
+      g.addColorStop(1, "#000");
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, W);
     }, false),
   );
 }

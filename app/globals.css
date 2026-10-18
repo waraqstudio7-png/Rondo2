@@ -227,3 +227,9 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; 
 .chip { appearance: none; cursor: pointer; padding: 9px 14px; border-radius: 99px; border: 1px solid var(--line); background: rgba(11, 14, 16, 0.7); color: var(--chalk); font: 600 13.5px var(--body); backdrop-filter: blur(8px); }
 .chip[aria-pressed="true"] { background: var(--chalk); color: var(--ink); border-color: var(--chalk); }
 @media (max-width: 640px) { .viewer-note { display: none; } }
+
+/* scrim: keeps the headline legible over the 3D pitch */
+.stage::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(11, 14, 16, 0.86) 0%, rgba(11, 14, 16, 0.55) 34%, rgba(11, 14, 16, 0) 58%),
+              linear-gradient(180deg, rgba(11, 14, 16, 0.55) 0%, rgba(11, 14, 16, 0) 22%, rgba(11, 14, 16, 0) 78%, rgba(11, 14, 16, 0.9) 100%); }
+@media (max-width: 760px) { .stage::after { background: linear-gradient(180deg, rgba(11, 14, 16, 0.92) 0%, rgba(11, 14, 16, 0.6) 40%, rgba(11, 14, 16, 0) 58%, rgba(11, 14, 16, 0.85) 100%); } }

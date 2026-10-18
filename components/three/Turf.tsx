@@ -11,7 +11,7 @@ import {
   Object3D,
   type WebGLProgramParametersWithUniforms,
 } from "three";
-import { pitchTexture, rng } from "./textures";
+import { pitchTexture, radialFadeTexture, rng } from "./textures";
 
 const SIZE = 26; // metres of pitch drawn
 
@@ -62,12 +62,13 @@ export function Turf({ count = 70000, radius = 7.5 }: { count?: number; radius?:
     return m;
   }, []);
   const ground = useMemo(() => pitchTexture(SIZE), []);
+  const fade = useMemo(() => radialFadeTexture(0.55, 1), []);
 
   // place blades once (deterministic), as instance attributes so colours exist before the shader compiles
   const { matrices, colors } = useMemo(() => {
     const matrices = new Float32Array(count * 16), colors = new Float32Array(count * 3);
     const R = rng(42), o = new Object3D(), c = new Color();
-    const base = [new Color("#2f6a3a"), new Color("#3a7a40"), new Color("#2a5f35"), new Color("#447f3f")];
+    const base = [new Color("#2f6a2c"), new Color("#3a7834"), new Color("#2a5e28"), new Color("#44823b")];
     for (let i = 0; i < count; i++) {
       const r = Math.sqrt(R()) * radius, a = R() * Math.PI * 2;
       const x = r * Math.cos(a), z = r * Math.sin(a);
@@ -78,7 +79,7 @@ export function Turf({ count = 70000, radius = 7.5 }: { count?: number; radius?:
       o.scale.set(1 + R() * 0.6, onLine ? 0.012 : 0.026 + R() * 0.03, 1);
       o.updateMatrix();
       o.matrix.toArray(matrices, i * 16);
-      if (onLine) c.set("#e9eee6");
+      if (onLine) c.set("#c9cfc6");
       else {
         c.copy(base[Math.floor(R() * base.length)]);
         const stripe = Math.floor((x + SIZE / 2) / 5) % 2 ? 0.88 : 1.06; // mown stripes
@@ -97,7 +98,7 @@ export function Turf({ count = 70000, radius = 7.5 }: { count?: number; radius?:
     <group>
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
         <planeGeometry args={[SIZE, SIZE]} />
-        <meshStandardMaterial map={ground} roughness={0.95} />
+        <meshStandardMaterial map={ground} alphaMap={fade} transparent depthWrite={false} roughness={0.95} />
       </mesh>
       <instancedMesh ref={mesh} args={[geo, mat, count]} frustumCulled={false}>
         <instancedBufferAttribute attach="instanceMatrix" args={[matrices, 16]} />
