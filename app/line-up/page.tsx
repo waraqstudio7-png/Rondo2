@@ -11,7 +11,7 @@ export default function LineUp() {
   return (
     <div className="page">
       <div className="wrap">
-        <PageHead minute="60'" crumb="The line-up" title="Pick your squad." lede="One panel family, from the back garden to a full academy. Start small, add panels, and clip on lights when you're ready. Open any card for the full spec." />
+        <PageHead minute="60'" crumb="The line-up" photo="/mood/bootroom.jpg" photoPos="center 40%" title="Pick your squad." lede="One panel family, from the back garden to a full academy. Start small, add panels, and clip on lights when you're ready. Open any card for the full spec." />
         <div className="tiers">
           {cards.map((t, i) => (
             <TLink key={t.slug} href={`/line-up/${t.slug}`} morph="self" data-card={t.slug} className={`tier face rise ${t.flood ? "flood" : ""}`} style={{ ["--i" as string]: i }}>

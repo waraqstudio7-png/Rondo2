@@ -15,7 +15,7 @@ export default function Reserve() {
   return (
     <div className="page">
       <div className="wrap">
-        <PageHead minute="90'" crumb="Final whistle" title="Get on the team sheet." lede="Hold a spot in the first production run with a CA$25 refundable deposit. It counts toward your order. If we don't ship, or you change your mind, you get it back." />
+        <PageHead minute="90'" crumb="Final whistle" photo="/mood/tunnel.jpg" photoPos="center 45%" title="Get on the team sheet." lede="Hold a spot in the first production run with a CA$25 refundable deposit. It counts toward your order. If we don't ship, or you change your mind, you get it back." />
         <div className="block soon">
           <span className="pill">Build step 7</span>
           <p className="muted">Deposits will run through a Stripe Payment Link. Nothing on this page takes payment yet.</p>

@@ -304,3 +304,15 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; 
 @media (max-width: 860px) { .scan { grid-template-columns: 1fr; } }
 .builder.compact .builder-stage { height: clamp(360px, 54vh, 560px); }
 .builder.compact .builder-hud { left: 12px; right: 12px; bottom: 12px; }
+
+/* Home: roots strip */
+.roots { display: grid; gap: 28px; }
+.roots-head { display: grid; gap: 12px; max-width: 760px; }
+.roots-head .minute { color: var(--flood); font-weight: 500; }
+.roots-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.root { margin: 0; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: #111518; }
+.root-img { aspect-ratio: 16 / 10; background: linear-gradient(160deg, #1c2124, #0f1214) center / cover no-repeat; position: relative; }
+.root-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,14,16,0) 55%, rgba(11,14,16,.55)); }
+.root figcaption { display: grid; gap: 6px; padding: 16px 18px 20px; }
+.roots > .btn { justify-self: start; }
+@media (max-width: 860px) { .roots-grid { grid-template-columns: 1fr; } }

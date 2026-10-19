@@ -9,7 +9,7 @@ export default function Why() {
   return (
     <div className="page">
       <div className="wrap">
-        <PageHead minute="15'" crumb="Why it works" photo="/mood/touch.jpg" photoPos="70% 60%" title="The wall gives the ball back. It never asks a question." lede="A rebound board trains your feet. The ring trains the picture in your head before the ball arrives." />
+        <PageHead minute="15'" crumb="Why it works" photo="/mood/cage.jpg" photoPos="center 60%" title="The wall gives the ball back. It never asks a question." lede="A rebound board trains your feet. The ring trains the picture in your head before the ball arrives." />
       </div>
       <div className="shouts block" aria-hidden="true">
         <div className="track">

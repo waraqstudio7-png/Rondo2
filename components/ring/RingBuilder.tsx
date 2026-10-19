@@ -12,11 +12,12 @@ import { Ball } from "../three/Ball";
 import { Turf } from "../three/Turf";
 import { StadiumEnv } from "../three/StadiumEnv";
 import { layoutFor, ringStats } from "@/lib/layout";
+import { BALL_STYLES, type BallStyle } from "../three/textures";
 
 const SIZES = [4, 6, 12, 16, 20] as const;
 type Lit = "all" | "alt";
 type LightMode = "drill" | "go" | "stop" | "off";
-type View = "over" | "player" | "bay";
+type View = "over" | "player" | "bay" | "ball";
 
 const GO = new Color("#22e070").multiplyScalar(6);
 const STOP = new Color("#ff4a3d").multiplyScalar(5.5);
@@ -75,6 +76,7 @@ function CameraRig({ n, view, controls }: { n: number; view: View; controls: Rea
     const L = layoutFor(n), st = ringStats(n);
     const d = Math.max(4.5, st.footprint * 1.05 + 1.5) * (tall ? 1.7 : 1);
     if (view === "over") goal.current = { pos: new Vector3(d * 0.62, d * 0.55, d * 0.62), tgt: new Vector3(0, 0.2, L.closed ? 0 : -L.radius * 0.6) };
+    else if (view === "ball") goal.current = { pos: new Vector3(0.62, 0.32, 0.62), tgt: new Vector3(0.25, 0.1, 0.15) };
     else if (view === "player") goal.current = { pos: new Vector3(0, 1.55, L.closed ? L.radius * 0.35 : 0.4), tgt: new Vector3(0, 0.3, -L.radius) };
     else {
       const s = L.slots[0];
@@ -122,6 +124,7 @@ export default function RingBuilder({ initial = 12, litCount, compact = false }:
   const step = litCount && litCount < n ? Math.max(1, Math.round(n / litCount)) : 2;
   const [mode, setMode] = useState<LightMode>(litCount === 0 ? "off" : "drill");
   const [view, setView] = useState<View>("over");
+  const [ball, setBall] = useState<BallStyle>("pentagon");
   const controls = useRef<OrbitControlsImpl | null>(null);
   const st = ringStats(n);
   const litN = lit === "all" ? n : Math.ceil(n / step);
@@ -139,9 +142,9 @@ export default function RingBuilder({ initial = 12, litCount, compact = false }:
             shadow-camera-left={-6} shadow-camera-right={6} shadow-camera-top={6} shadow-camera-bottom={-6} shadow-bias={-0.0004} shadow-normalBias={0.02} />
           <Turf count={blades} radius={8} />
           <Ring n={n} lit={lit} mode={mode} step={step} />
-          <Ball position={[0.25, 0.11, 0.15]} />
+          <Ball position={[0.25, 0.11, 0.15]} ballStyle={ball} />
           <OrbitControls ref={controls} makeDefault enableDamping dampingFactor={0.08} target={[0, 0.2, 0]}
-            minDistance={0.8} maxDistance={22} maxPolarAngle={Math.PI / 2 - 0.04} autoRotate={view === "over"} autoRotateSpeed={0.35} />
+            minDistance={0.35} maxDistance={22} maxPolarAngle={Math.PI / 2 - 0.04} autoRotate={view === "over"} autoRotateSpeed={0.35} />
           <CameraRig n={n} view={view} controls={controls} />
           <EffectComposer multisampling={4}>
             <Bloom mipmapBlur intensity={1.2} luminanceThreshold={1.3} radius={0.7} />
@@ -154,8 +157,10 @@ export default function RingBuilder({ initial = 12, litCount, compact = false }:
           {compact ? null : <Seg label="Lit" value={lit} options={["all", "alt"] as const} onChange={setLit} render={(v) => (v === "all" ? "All" : "Every other")} />}
           <Seg label="Light" value={mode} options={["drill", "go", "stop", "off"] as const} onChange={setMode}
             render={(v) => ({ drill: "Drill", go: "Green", stop: "Red", off: "Off" })[v]} />
-          <Seg label="View" value={view} options={["over", "player", "bay"] as const} onChange={setView}
-            render={(v) => ({ over: "Overview", player: "Player eye", bay: "Engine bay" })[v]} />
+          <Seg label="View" value={view} options={["over", "player", "bay", "ball"] as const} onChange={setView}
+            render={(v) => ({ over: "Overview", player: "Player eye", bay: "Engine bay", ball: "Ball" })[v]} />
+          {compact ? null : <Seg label="Ball" value={ball} options={BALL_STYLES.map((b) => b.id)} onChange={(b) => { setBall(b); setView("ball"); }}
+            render={(v) => BALL_STYLES.find((b) => b.id === v)!.name} />}
         </div>
       </div>
 

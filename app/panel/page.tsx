@@ -9,7 +9,7 @@ export default function PanelPage() {
   return (
     <div className="page">
       <div className="wrap">
-        <PageHead minute="30'" crumb="The panel" title="Engineered like an engine bay." lede="One panel, built to take a driven pass and give the same return every time. Turn the station, switch the light, then tap a part to see what it does." />
+        <PageHead minute="30'" crumb="The panel" photo="/mood/touch.jpg" photoPos="70% 60%" title="Engineered like an engine bay." lede="One panel, built to take a driven pass and give the same return every time. Turn the station, switch the light, then tap a part to see what it does." />
         <div className="block"><ViewerSlot /></div>
         <Anatomy />
         <div className="block numbers">

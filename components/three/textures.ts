@@ -146,7 +146,22 @@ export function plyEdgeTexture() {
  * spherical Voronoi diagram of the 12 icosahedron vertices plus the 20 face centres. Each texel finds its nearest
  * two centres; the gap between them draws the stitched seam. Returns colour map and a bump map for the seams.
  */
-export function ballTextures() {
+export type BallStyle = "leather" | "pentagon" | "winter" | "rondo";
+export const BALL_STYLES: { id: BallStyle; name: string; note: string }[] = [
+  { id: "leather", name: "Laced leather", note: "1950s · 18 panels" },
+  { id: "pentagon", name: "Black pentagons", note: "1970s · 32 panels" },
+  { id: "winter", name: "Hi-vis winter", note: "Snow and fog" },
+  { id: "rondo", name: "RONDO training", note: "Ours" },
+];
+
+const ballCache: Partial<Record<BallStyle, { map: CanvasTexture; bumpMap: CanvasTexture; roughnessMap: CanvasTexture }>> = {};
+
+/**
+ * Size 5 ball skins, all unbranded and era-inspired (no maker marks or signature graphics).
+ * Equirectangular colour, bump and roughness maps with scuffs, grass and mud so the ball reads as used, not new.
+ */
+export function ballTextures(style: BallStyle = "pentagon") {
+  if (ballCache[style]) return ballCache[style]!;
   const p = (1 + Math.sqrt(5)) / 2;
   const V: [number, number, number][] = [
     [-1, p, 0], [1, p, 0], [-1, -p, 0], [1, -p, 0], [0, -1, p], [0, 1, p],
@@ -162,36 +177,89 @@ export function ballTextures() {
     ...F.map(([a, b, c]) => ({ v: norm([V[a][0] + V[b][0] + V[c][0], V[a][1] + V[b][1] + V[c][1], V[a][2] + V[b][2] + V[c][2]]), pent: false })),
   ];
   const W = 1024, H = 512;
-  const col = document.createElement("canvas"), bump = document.createElement("canvas");
-  col.width = bump.width = W;
-  col.height = bump.height = H;
-  const ci = col.getContext("2d")!.createImageData(W, H), bi = bump.getContext("2d")!.createImageData(W, H);
+  const col = document.createElement("canvas"), bump = document.createElement("canvas"), rough = document.createElement("canvas");
+  col.width = bump.width = rough.width = W;
+  col.height = bump.height = rough.height = H;
+  const ci = col.getContext("2d")!.createImageData(W, H), bi = bump.getContext("2d")!.createImageData(W, H), ri = rough.getContext("2d")!.createImageData(W, H);
+  const R = rng(style.length * 97 + 7);
+  // Low-frequency wear field: a few scuff blobs and grass/mud smears on the sphere.
+  const marks = Array.from({ length: style === "leather" ? 26 : 16 }, () => {
+    const v = norm([R() * 2 - 1, R() * 2 - 1, R() * 2 - 1]);
+    return { v, r: 0.04 + R() * 0.16, kind: R() < 0.45 ? 0 : R() < 0.6 ? 1 : 2, a: 0.25 + R() * 0.5 };
+  });
   for (let y = 0; y < H; y++) {
     const lat = (0.5 - (y + 0.5) / H) * Math.PI, cl = Math.cos(lat), sl = Math.sin(lat);
     for (let x = 0; x < W; x++) {
       const lon = ((x + 0.5) / W) * 2 * Math.PI - Math.PI;
       const d = [cl * Math.cos(lon), sl, -cl * Math.sin(lon)];
-      let b1 = -2, b2 = -2, i1 = 0;
-      for (let i = 0; i < 32; i++) {
-        const v = centres[i].v, dot = d[0] * v[0] + d[1] * v[1] + d[2] * v[2];
-        if (dot > b1) { b2 = b1; b1 = dot; i1 = i; } else if (dot > b2) b2 = dot;
+      let rC = 0, gC = 0, bC = 0, seam = 1, rgh = 0.45;
+      if (style === "leather") {
+        // 6 groups of 3 parallel strips (cube faces), like pre-1960s balls.
+        const ax = [Math.abs(d[0]), Math.abs(d[1]), Math.abs(d[2])];
+        const m = ax[0] > ax[1] ? (ax[0] > ax[2] ? 0 : 2) : ax[1] > ax[2] ? 1 : 2;
+        const u = d[(m + 1) % 3] / ax[m], w = d[(m + 2) % 3] / ax[m];
+        const sAxis = m % 2 === 0 ? u : w; // alternate strip direction per face
+        const strip = Math.floor((sAxis + 1) * 1.5);
+        const f = Math.abs(((sAxis + 1) * 1.5) % 1 - 0.5);
+        const edge = 1 - Math.max(Math.abs(u), Math.abs(w));
+        seam = Math.min(1, Math.min((0.5 - f) / 0.04, edge / 0.02));
+        const tone = [0.0, 0.06, -0.04][strip % 3] + (m % 3) * 0.02;
+        rC = 128 * (1 + tone); gC = 78 * (1 + tone); bC = 44 * (1 + tone);
+        // Lace slit on the +y face centre strip.
+        if (m === 1 && d[1] > 0 && Math.abs(u) < 0.05 && Math.abs(w) < 0.33) {
+          const zig = Math.abs(((w * 30) % 1 + 1) % 1 - 0.5);
+          if (zig < 0.28) { rC = 205; gC = 175; bC = 120; seam = 0.7; }
+          else { rC = 40; gC = 22; bC = 12; seam = 0.2; }
+        }
+        rgh = 0.62;
+      } else {
+        let b1 = -2, b2 = -2, i1 = 0;
+        for (let i = 0; i < 32; i++) {
+          const v = centres[i].v, dot = d[0] * v[0] + d[1] * v[1] + d[2] * v[2];
+          if (dot > b1) { b2 = b1; b1 = dot; i1 = i; } else if (dot > b2) b2 = dot;
+        }
+        seam = Math.min(1, (b1 - b2) / 0.012);
+        const pent = centres[i1].pent;
+        if (style === "pentagon") {
+          [rC, gC, bC] = pent ? [24, 24, 26] : [236, 233, 222];
+        } else if (style === "winter") {
+          [rC, gC, bC] = pent ? [22, 30, 58] : [255, 238, 34];
+        } else {
+          // RONDO training ball: chalk white, graphite pentagons with a green ring, one green great-circle band.
+          const dotC = centres[i1].v, dd = d[0] * dotC[0] + d[1] * dotC[1] + d[2] * dotC[2];
+          if (pent) [rC, gC, bC] = dd > 0.955 ? [32, 36, 38] : [43, 216, 131];
+          else [rC, gC, bC] = [240, 239, 233];
+          if (!pent && Math.abs(d[1] * 0.8 + d[0] * 0.6) < 0.012) [rC, gC, bC] = [43, 216, 131];
+        }
+        rgh = 0.4;
       }
-      const seam = Math.min(1, (b1 - b2) / 0.012); // 0 on the seam, 1 inside a panel
-      const pent = centres[i1].pent;
-      const base = pent ? 22 : 238;
-      const shade = Math.round(base * (0.55 + 0.45 * seam));
+      // Wear: scuffs lighten and roughen, grass tints green, mud darkens.
+      for (const mk of marks) {
+        const dot = d[0] * mk.v[0] + d[1] * mk.v[1] + d[2] * mk.v[2];
+        const t = (dot - (1 - mk.r)) / mk.r;
+        if (t <= 0) continue;
+        const n = R() * 0.5 + 0.5, a = Math.min(1, t * 1.6) * mk.a * n;
+        if (mk.kind === 0) { rC += (200 - rC) * a * 0.35; gC += (195 - gC) * a * 0.35; bC += (185 - bC) * a * 0.35; rgh += a * 0.25; }
+        else if (mk.kind === 1) { rC += (70 - rC) * a * 0.4; gC += (105 - gC) * a * 0.4; bC += (45 - bC) * a * 0.4; }
+        else { rC += (60 - rC) * a * 0.45; gC += (46 - gC) * a * 0.45; bC += (32 - bC) * a * 0.45; rgh += a * 0.2; }
+      }
+      const grain = 1 + (R() - 0.5) * (style === "leather" ? 0.16 : 0.05);
+      const sh = (0.5 + 0.5 * seam) * grain;
       const k = (y * W + x) * 4;
-      ci.data[k] = shade; ci.data[k + 1] = shade; ci.data[k + 2] = pent ? shade + 2 : shade - 4; ci.data[k + 3] = 255;
-      const bv = Math.round(255 * Math.pow(seam, 0.5));
+      ci.data[k] = Math.min(255, rC * sh); ci.data[k + 1] = Math.min(255, gC * sh); ci.data[k + 2] = Math.min(255, bC * sh); ci.data[k + 3] = 255;
+      const bv = Math.round(255 * Math.pow(seam, 0.5) * (style === "leather" ? 0.92 + R() * 0.08 : 1));
       bi.data[k] = bi.data[k + 1] = bi.data[k + 2] = bv; bi.data[k + 3] = 255;
+      const rv = Math.round(255 * Math.min(1, rgh + (1 - seam) * 0.3));
+      ri.data[k] = ri.data[k + 1] = ri.data[k + 2] = rv; ri.data[k + 3] = 255;
     }
   }
   col.getContext("2d")!.putImageData(ci, 0, 0);
   bump.getContext("2d")!.putImageData(bi, 0, 0);
-  const map = new CanvasTexture(col), bumpMap = new CanvasTexture(bump);
+  rough.getContext("2d")!.putImageData(ri, 0, 0);
+  const map = new CanvasTexture(col), bumpMap = new CanvasTexture(bump), roughnessMap = new CanvasTexture(rough);
   map.colorSpace = SRGBColorSpace;
-  map.anisotropy = bumpMap.anisotropy = 8;
-  return { map, bumpMap };
+  map.anisotropy = bumpMap.anisotropy = roughnessMap.anisotropy = 8;
+  return (ballCache[style] = { map, bumpMap, roughnessMap });
 }
 
 /**
