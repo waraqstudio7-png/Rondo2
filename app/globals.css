@@ -347,3 +347,15 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; 
 .impact-range input { accent-color: var(--go); width: 100%; }
 .impact-range b { min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 860px) { .impact { grid-template-columns: 1fr; } }
+
+/* Waitlist */
+.wl { display: grid; gap: 18px; padding: clamp(20px, 3vw, 34px); }
+.wl-field { display: grid; gap: 8px; }
+.wl-field input { font: 500 18px var(--body); color: var(--chalk); background: #0d1113; border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; outline: none; }
+.wl-field input:focus { border-color: var(--go); box-shadow: 0 0 0 3px rgba(43,216,131,.18); }
+.wl-row { display: grid; gap: 10px; }
+.wl-consent { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; color: var(--mist); font-size: 15px; line-height: 1.5; cursor: pointer; }
+.wl-consent input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--go); }
+.wl .btn.big { justify-self: start; padding: 17px 28px; font-size: 17px; }
+.wl .btn:disabled { opacity: .45; cursor: default; transform: none; }
+.wl-err { color: var(--stop); }

@@ -46,7 +46,7 @@ export function Header() {
           <span className="t">{title}</span>
         </div>
         <TLink href="/reserve" morph="self" className="btn sm primary">
-          Reserve CA$25
+          Join the waitlist
         </TLink>
       </div>
       <div className="prog" style={{ width: `${p * 100}%` }} />

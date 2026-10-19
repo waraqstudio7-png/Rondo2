@@ -32,7 +32,7 @@ export const TIERS: Tier[] = [
       ["Use", "Indoor first"],
     ],
     box: ["4 Street panels", "Fill caps and anti-slip feet", "Drill card: 12 sessions, easy to hard"],
-    cta: "Reserve CA$25",
+    cta: "Join the waitlist",
     ring: { panels: 4, lit: 0, open: true },
   },
   {
@@ -52,7 +52,7 @@ export const TIERS: Tier[] = [
       ["Parts", "Every part replaceable"],
     ],
     box: ["12 Club panels", "4 Smart Clips and hub", "Coach remote", "Rolling cart", "Session plans by age group"],
-    cta: "Reserve CA$25",
+    cta: "Join the waitlist",
     ring: { panels: 12, lit: 4 },
     tag: "Most clubs",
   },
@@ -92,7 +92,7 @@ export const TIERS: Tier[] = [
       ["Power", "Rechargeable (target)"],
     ],
     box: ["1 Smart Clip", "Charging cable", "Quick-start drill card"],
-    cta: "Reserve CA$25",
+    cta: "Join the waitlist",
     ring: { panels: 4, lit: 4, open: true },
   },
 ];

@@ -39,7 +39,7 @@ export default async function TierPage({ params }: Props) {
             </ul>
             <div className="buy rise" style={{ ["--i" as string]: 3 }}>
               <div className="price">{t.price}<small>{t.priceNote}</small></div>
-              <TLink href="/reserve" morph="self" className="btn primary">{t.cta}</TLink>
+              <TLink href={`/reserve?tier=${t.slug}`} morph="self" className="btn primary">{t.cta}</TLink>
             </div>
             <p className="note">Specs are design targets for the production version and may change after testing.</p>
           </div>

@@ -7,7 +7,7 @@ export const NAV: NavItem[] = [
   { id: "scan-test", href: "/scan-test", title: "Scan test", short: "Scan", minute: 45 },
   { id: "line-up", href: "/line-up", title: "Line-up", short: "Line-up", minute: 60 },
   { id: "impact", href: "/impact", title: "Impact", short: "Impact", minute: 75 },
-  { id: "reserve", href: "/reserve", title: "Reserve", short: "Reserve", minute: 90 },
+  { id: "reserve", href: "/reserve", title: "Waitlist", short: "Waitlist", minute: 90 },
 ];
 
 export const HOME = { href: "/", title: "Centre circle", minute: 0 };

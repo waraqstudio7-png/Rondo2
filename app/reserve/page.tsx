@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { PageHead } from "@/components/Page";
+import WaitlistSlot from "@/components/reserve/WaitlistSlot";
 
-export const metadata: Metadata = { title: "Reserve" };
+export const metadata: Metadata = { title: "Join the waitlist", description: "Get first news from RONDO prototype testing and first access to the production run. Free." };
 
 const FAQ = [
   ["Does it work with a size 4 ball?", "The ring is designed around size 5, and size 4 is on the test list. A size 4 sits about 7 mm lower on the face, so the default tilt may change."],
@@ -15,11 +16,8 @@ export default function Reserve() {
   return (
     <div className="page">
       <div className="wrap">
-        <PageHead minute="90'" crumb="Final whistle" photo="/mood/tunnel.jpg" photoPos="center 45%" title="Get on the team sheet." lede="Hold a spot in the first production run with a CA$25 refundable deposit. It counts toward your order. If we don't ship, or you change your mind, you get it back." />
-        <div className="block soon">
-          <span className="pill">Build step 7</span>
-          <p className="muted">Deposits will run through a Stripe Payment Link. Nothing on this page takes payment yet.</p>
-        </div>
+        <PageHead minute="90'" crumb="Final whistle" photo="/mood/tunnel.jpg" photoPos="center 45%" title="Get on the team sheet." lede="Join the free waitlist. You'll hear first when prototype testing results land, get first access to the production run, and lock in the founding price. No payment, no spam." />
+        <div className="block" style={{ maxWidth: 860 }}><WaitlistSlot /></div>
         <div className="block" style={{ maxWidth: 860 }}>
           <div className="mono muted" style={{ marginBottom: 18 }}><b className="minute">90+2&apos;</b> Stoppage-time questions</div>
           {FAQ.map(([q, a]) => (
