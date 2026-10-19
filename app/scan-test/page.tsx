@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { NextFixture, PageHead } from "@/components/Page";
+import ScanSlot from "@/components/scan/ScanSlot";
 
 export const metadata: Metadata = { title: "Scan test" };
 
@@ -14,11 +15,8 @@ export default function ScanTest() {
   return (
     <div className="page">
       <div className="wrap">
-        <PageHead minute="45'" crumb="Half-time challenge" title="The scan test." lede="The ball comes in from a teammate. A panel flashes green while it travels, and red ones try to fool you. When it reaches you, play it to where the green was. Ten balls." />
-        <div className="block soon">
-          <span className="pill">Build step 5</span>
-          <p className="muted">The playable scan test (8 panels, 3 levels, decision time in ms, share cards) is ported from the demo in the next build step.</p>
-        </div>
+        <PageHead minute="45'" crumb="Half-time challenge" photo="/mood/scan.jpg" photoPos="center 30%" title="The scan test." lede="The ball comes in from a teammate (amber). A panel flashes green while it travels, and red ones try to fool you. When it arrives, play it to where the green was. Ten balls." />
+        <div className="block"><ScanSlot /></div>
         <div className="block" style={{ display: "grid", gap: 0 }}>
           {MODES.map(([c, h, p]) => (
             <div key={h} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 16, padding: "16px 0", borderTop: "1px solid var(--line)" }}>

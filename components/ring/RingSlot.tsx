@@ -7,6 +7,6 @@ const RingBuilder = dynamic(() => import("./RingBuilder"), {
   loading: () => <div className="builder-stage" aria-hidden="true" />,
 });
 
-export default function RingSlot() {
-  return <RingBuilder />;
+export default function RingSlot(props: { initial?: number; litCount?: number; compact?: boolean }) {
+  return <RingBuilder {...props} />;
 }

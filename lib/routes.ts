@@ -4,7 +4,7 @@ export type NavItem = { id: string; href: string; title: string; short: string; 
 export const NAV: NavItem[] = [
   { id: "why", href: "/why", title: "Why it works", short: "Why", minute: 15 },
   { id: "panel", href: "/panel", title: "The panel", short: "Panel", minute: 30 },
-  { id: "scan-test", href: "/scan-test", title: "Scan test", short: "Scan test", minute: 45 },
+  { id: "scan-test", href: "/scan-test", title: "Scan test", short: "Scan", minute: 45 },
   { id: "line-up", href: "/line-up", title: "Line-up", short: "Line-up", minute: 60 },
   { id: "impact", href: "/impact", title: "Impact", short: "Impact", minute: 75 },
   { id: "reserve", href: "/reserve", title: "Reserve", short: "Reserve", minute: 90 },

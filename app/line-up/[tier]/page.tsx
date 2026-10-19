@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Formation, PageHead } from "@/components/Page";
 import { TLink } from "@/components/TLink";
 import { TIERS, tierBySlug } from "@/lib/tiers";
+import RingSlot from "@/components/ring/RingSlot";
 
 type Props = { params: Promise<{ tier: string }> };
 
@@ -23,7 +24,9 @@ export default async function TierPage({ params }: Props) {
       <div className="wrap">
         <PageHead minute="60'" crumb={t.name} title={t.name} lede={t.lede} back={{ href: "/line-up", label: "Line-up" }} tone={t.flood ? "flood" : undefined} />
         <div className="block td">
-          <div className="rise"><Formation {...t.ring} /></div>
+          <div className="rise">
+            {t.slug === "club" || t.slug === "arena" ? <RingSlot initial={t.ring.panels} litCount={t.ring.lit} compact /> : <Formation {...t.ring} />}
+          </div>
           <div>
             <dl className="kv rise" style={{ ["--i" as string]: 1 }}>
               {t.specs.map(([k, v]) => (

@@ -8,6 +8,8 @@ export function PageHead({
   lede,
   back = { href: "/", label: "Centre circle" },
   tone,
+  photo,
+  photoPos,
 }: {
   minute: string;
   crumb: string;
@@ -15,9 +17,13 @@ export function PageHead({
   lede?: string;
   back?: { href: string; label: string };
   tone?: "flood" | "red";
+  /** Mood photo (public path). Shown as a CSS background so a missing file just leaves the hex face. */
+  photo?: string;
+  photoPos?: string;
 }) {
   return (
-    <header className={`pagehead face ${tone ?? ""}`} data-morph>
+    <header className={`pagehead face ${tone ?? ""} ${photo ? "has-photo" : ""}`} data-morph>
+      {photo ? <div className="ph-photo" aria-hidden="true" style={{ backgroundImage: `url(${photo})`, backgroundPosition: photoPos ?? "center" }} /> : null}
       <div className="crumbs mono">
         <TLink href={back.href} morph="head" className="back">
           ← {back.label}

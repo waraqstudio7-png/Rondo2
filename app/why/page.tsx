@@ -9,7 +9,7 @@ export default function Why() {
   return (
     <div className="page">
       <div className="wrap">
-        <PageHead minute="15'" crumb="Why it works" title="The wall gives the ball back. It never asks a question." lede="A rebound board trains your feet. The ring trains the picture in your head before the ball arrives." />
+        <PageHead minute="15'" crumb="Why it works" photo="/mood/touch.jpg" photoPos="70% 60%" title="The wall gives the ball back. It never asks a question." lede="A rebound board trains your feet. The ring trains the picture in your head before the ball arrives." />
       </div>
       <div className="shouts block" aria-hidden="true">
         <div className="track">
@@ -47,7 +47,7 @@ export default function Why() {
         <div className="block compare">
           <div className="cmp"><span className="mono muted">The wall</span><span className="h3">Free. Honest. Silent.</span><ul><li>Returns depend on the brickwork</li><li>Always in front of you</li><li>No scanning, no decisions</li></ul></div>
           <div className="cmp"><span className="mono muted">Reaction lights</span><span className="h3">Fast hands, no ball.</span><ul><li>Tap pods on cones</li><li>Great for reactions</li><li>Nothing to pass to</li></ul></div>
-          <div className="cmp us"><span className="mono go">RONDO</span><span className="h3">Look, then pass.</span><ul><li>Engineered, consistent returns</li><li>Lights all the way around you</li><li>Scored on the pass, not a tap</li></ul></div>
+          <div className="cmp us"><span className="mono go">RONDO</span><span className="h3">Look, then pass.</span><ul><li>Engineered, consistent returns</li><li>Cues behind you and out wide</li><li>Scored on the pass, not a tap</li></ul></div>
         </div>
         <NextFixture href="/panel" minute="30'" title="The panel" />
       </div>
