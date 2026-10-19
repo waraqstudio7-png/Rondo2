@@ -106,7 +106,7 @@ export default function Waitlist() {
         {state === "sending" ? "Sending…" : "Join the waitlist"}
       </button>
       {msg ? <p className="wl-err" role="alert">{msg}</p> : null}
-      <p className="note">Your email is used only for RONDO updates and is never sold. Sent from Waraq Studio, Ontario, Canada.</p>
+      <p className="note">Your email is used only for RONDO updates and is never sold. Sent from Waraq Studio, Ontario, Canada. <a href="/privacy">Privacy</a></p>
     </form>
   );
 }

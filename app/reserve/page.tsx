@@ -30,6 +30,7 @@ export default function Reserve() {
         <footer style={{ borderTop: "2px solid var(--line)", marginTop: 80, paddingTop: 40, color: "var(--mist)", fontSize: 14 }}>
           <div className="mono" style={{ marginBottom: 12 }}><span className="go">FT</span> · RONDO is a working name · Ontario, Canada</div>
           <div>Product visuals are 3D concept renders, not photos of a finished product. Mood photos are AI-generated illustrations.</div>
+          <div style={{ marginTop: 8 }}><a href="/privacy" style={{ color: "var(--chalk)" }}>Privacy</a></div>
         </footer>
       </div>
     </div>

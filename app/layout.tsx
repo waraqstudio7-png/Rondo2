@@ -9,6 +9,7 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { TransitionProvider } from "@/components/TransitionProvider";
 import { Dock, Header } from "@/components/Chrome";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: { default: "RONDO · Every pass starts with a look", template: "%s · RONDO" },
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main>{children}</main>
           <Dock />
         </TransitionProvider>
+        <Analytics />
       </body>
     </html>
   );
