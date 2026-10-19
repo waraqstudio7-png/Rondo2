@@ -146,10 +146,11 @@ export function plyEdgeTexture() {
  * spherical Voronoi diagram of the 12 icosahedron vertices plus the 20 face centres. Each texel finds its nearest
  * two centres; the gap between them draws the stitched seam. Returns colour map and a bump map for the seams.
  */
-export type BallStyle = "leather" | "pentagon" | "winter" | "rondo";
+export type BallStyle = "leather" | "pentagon" | "bonded8" | "winter" | "rondo";
 export const BALL_STYLES: { id: BallStyle; name: string; note: string }[] = [
   { id: "leather", name: "Laced leather", note: "1950s · 18 panels" },
   { id: "pentagon", name: "Black pentagons", note: "1970s · 32 panels" },
+  { id: "bonded8", name: "Bonded 8", note: "2010s · 8 panels" },
   { id: "winter", name: "Hi-vis winter", note: "Snow and fog" },
   { id: "rondo", name: "RONDO training", note: "Ours" },
 ];
@@ -212,6 +213,17 @@ export function ballTextures(style: BallStyle = "pentagon") {
           else { rC = 40; gC = 22; bC = 12; seam = 0.2; }
         }
         rgh = 0.62;
+      } else if (style === "bonded8") {
+        // 8 thermally bonded panels: octants with seams bent into S-curves (no stitching, no maker graphics).
+        const wx = d[0] + 0.22 * Math.sin(2.6 * d[1]), wy = d[1] + 0.22 * Math.sin(2.6 * d[2]), wz = d[2] + 0.22 * Math.sin(2.6 * d[0]);
+        const mn = Math.min(Math.abs(wx), Math.abs(wy), Math.abs(wz));
+        seam = Math.min(1, mn / 0.02);
+        const oct = (wx > 0 ? 1 : 0) + (wy > 0 ? 2 : 0) + (wz > 0 ? 4 : 0);
+        [rC, gC, bC] = [242, 241, 236];
+        // Our accent: a thin graphite swirl line inside each panel, alternating with a chalk-green one.
+        const swirl = Math.abs(mn - 0.16);
+        if (swirl < 0.012) [rC, gC, bC] = oct % 2 ? [44, 50, 54] : [43, 190, 120];
+        rgh = 0.36;
       } else {
         let b1 = -2, b2 = -2, i1 = 0;
         for (let i = 0; i < 32; i++) {

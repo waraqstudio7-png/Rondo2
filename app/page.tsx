@@ -2,6 +2,7 @@ import RingNav from "@/components/home/RingNav";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { TLink } from "@/components/TLink";
+import { BALLS, BOOTS } from "@/lib/heritage";
 
 const ROOTS = [
   { img: "jumpers", h: "Jumpers for goalposts", p: "Two tops on the grass and the whole park is a stadium.", alt: "Two jumpers as goalposts on a muddy park pitch at dusk" },
@@ -10,6 +11,7 @@ const ROOTS = [
 ];
 
 /** The strip only renders once its photos are in /public/mood (they are exported from Canva). */
+const hasBoots = existsSync(join(process.cwd(), "public", "mood", "boots.jpg"));
 const hasRoots = ["jumpers", "cage", "leather"].every((f) => existsSync(join(process.cwd(), "public", "mood", `${f}.jpg`)));
 
 export default function Home() {
@@ -56,6 +58,36 @@ export default function Home() {
           </div>
           <TLink href="/ring" morph="self" className="btn">Try the old balls in the ring builder →</TLink>
         </section>) : null}
+        <section className="kit block" aria-labelledby="kit-h">
+          <div className="roots-head">
+            <span className="mono muted"><b className="minute">0&apos;</b> The kit room</span>
+            <h2 className="h2" id="kit-h">The ball and the boot, a century apart.</h2>
+            <p className="lede">Every change to the ball changed how it moved off your foot. Every change to the boot changed how it felt. Tap a ball to roll it into the ring.</p>
+          </div>
+          <ol className="kit-balls" aria-label="How the match ball changed">
+            {BALLS.map((b) => (
+              <li key={b.year}>
+                <TLink href={`/ring?ball=${b.ball}`} morph="self" className="kit-card">
+                  <span className={`kit-ball ${b.ball}`} aria-hidden="true" />
+                  <span className="kit-year">{b.year}</span>
+                  <span className="h3">{b.name}</span>
+                  <span className="muted">{b.fact}</span>
+                </TLink>
+              </li>
+            ))}
+          </ol>
+          {hasBoots ? (
+            <figure className="kit-boots">
+              <div className="kit-boots-img" role="img" aria-label="Five football boots showing a century of design, from high-ankle leather to knitted laceless" />
+              <ol>
+                {BOOTS.map((b) => (
+                  <li key={b.year}><span className="kit-year">{b.year}</span><span className="h3">{b.name}</span><span className="muted">{b.fact}</span></li>
+                ))}
+              </ol>
+            </figure>
+          ) : null}
+          <p className="note">History for reference. Ball and boot names belong to their makers; RONDO is not affiliated with them. Photos are AI-generated illustrations.</p>
+        </section>
       </div>
     </div>
   );

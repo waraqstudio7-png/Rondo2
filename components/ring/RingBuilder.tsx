@@ -126,6 +126,12 @@ export default function RingBuilder({ initial = 12, litCount, compact = false }:
   const [view, setView] = useState<View>("over");
   const [ball, setBall] = useState<BallStyle>("pentagon");
   const controls = useRef<OrbitControlsImpl | null>(null);
+  // Deep link from the kit room: /ring?ball=leather opens that ball, close up.
+  useEffect(() => {
+    if (compact) return;
+    const q = new URLSearchParams(window.location.search).get("ball");
+    if (q && BALL_STYLES.some((b) => b.id === q)) { setBall(q as BallStyle); setView("ball"); setTimeout(() => document.querySelector(".builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 400); }
+  }, [compact]);
   const st = ringStats(n);
   const litN = lit === "all" ? n : Math.ceil(n / step);
   const blades = typeof window !== "undefined" && window.innerWidth < 700 ? 22000 : 50000;
